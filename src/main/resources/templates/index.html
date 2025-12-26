@@ -2,66 +2,151 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <title>TypeBurst AI - 活力星空版</title>
+    <title>TypeBurst AI - 璀璨星环版</title>
     <style>
+        :root {
+            --primary-glow: #00d8ff;
+            --accent-purple: #a100ff;
+            --planet-orange: #ff8c42;
+        }
+
         body {
             display: flex; flex-direction: column; align-items: center;
-            background: radial-gradient(circle at center, #1b2735 0%, #090a0f 100%);
-            color: white; font-family: 'Microsoft YaHei';
+            background: radial-gradient(circle at center, #1b2735 0%, #05050a 100%);
+            color: white; font-family: 'Microsoft YaHei', sans-serif;
             margin: 0; padding: 20px; min-height: 100vh; overflow: hidden;
         }
+
+        /* --- 星空背景装饰 --- */
+        #star-field { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+        .star {
+            position: absolute; background: white; border-radius: 50%;
+            opacity: 0.5; animation: twinkle var(--duration) infinite ease-in-out;
+        }
+        @keyframes twinkle { 0%, 100% { opacity: 0.2; transform: scale(1); } 50% { opacity: 0.9; transform: scale(1.3); } }
+
+        /* --- 精致星球（带星环） --- */
+        .planet-container { position: absolute; z-index: 1; pointer-events: none; opacity: 0.8; }
+        .planet {
+            width: 80px; height: 80px; border-radius: 50%;
+            background: var(--color);
+            box-shadow: inset -15px -15px 30px rgba(0,0,0,0.5), 0 0 20px var(--color);
+            position: relative;
+        }
+        .ring {
+            position: absolute; top: 50%; left: 50%;
+            width: 160px; height: 40px;
+            border: 6px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%) rotateX(75deg) rotateZ(var(--angle));
+            box-shadow: 0 0 10px rgba(255,255,255,0.1);
+        }
+
+        /* --- 宇航员 (升级版) --- */
+        .astronaut {
+            position: absolute; width: 80px; z-index: 2;
+            left: 10%; top: 20%;
+            animation: astro-float 6s infinite ease-in-out;
+            filter: drop-shadow(0 0 15px rgba(0,216,255,0.3));
+        }
+        @keyframes astro-float {
+            0%, 100% { transform: translate3d(0,0,0) rotate(-5deg); }
+            50% { transform: translate3d(15px, -25px, 0) rotate(5deg); }
+        }
+
+        /* --- UFO (静默漂浮版) --- */
+        .ufo-fixed {
+            position: absolute; right: 12%; bottom: 25%; font-size: 45px;
+            z-index: 2; animation: ufo-float 4s infinite ease-in-out;
+            filter: drop-shadow(0 0 15px #00ff88);
+        }
+        @keyframes ufo-float {
+            0%, 100% { transform: translate3d(0,0,0) scale(1); }
+            50% { transform: translate3d(-10px, 15px, 0) scale(1.1); }
+        }
+
+        /* --- 游戏主界面 --- */
         h1 {
-            color: #00d8ff; text-shadow: 0 0 20px rgba(0,216,255,0.6);
-            margin-top: 0; z-index: 10;
+            color: var(--primary-glow); font-size: 2.5em;
+            text-shadow: 0 0 20px rgba(0,216,255,0.8);
+            margin-top: 0; z-index: 10; letter-spacing: 5px;
         }
 
         #game-stage {
             position: relative; width: 900px; height: 600px;
-            background: rgba(15, 52, 96, 0.4);
-            border: 2px solid rgba(0, 216, 255, 0.5);
-            border-radius: 20px; overflow: hidden;
-            box-shadow: 0 0 40px rgba(0,0,0,0.5);
-            backdrop-filter: blur(4px);
+            background: rgba(10, 25, 47, 0.4);
+            border: 2px solid rgba(0, 216, 255, 0.3);
+            border-radius: 25px; overflow: hidden;
+            box-shadow: 0 0 50px rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px); z-index: 5;
         }
 
         #control-panel { margin-bottom: 15px; z-index: 10; }
         select {
-            padding: 10px 20px; border-radius: 20px;
+            padding: 10px 25px; border-radius: 25px;
             background: #16213e; color: #00d8ff;
             border: 1px solid #00d8ff; cursor: pointer; outline: none;
         }
 
         #input-container { margin-top: 25px; z-index: 10; }
         input {
-            padding: 18px; font-size: 22px; width: 480px;
-            border-radius: 40px; border: 2px solid #00d8ff;
-            background: rgba(26, 26, 46, 0.8); color: white;
+            padding: 18px 30px; font-size: 24px; width: 500px;
+            border-radius: 50px; border: 2px solid var(--primary-glow);
+            background: rgba(15, 52, 96, 0.9); color: white;
             text-align: center; outline: none; transition: 0.3s;
         }
-        input:focus { box-shadow: 0 0 30px rgba(0, 216, 255, 0.6); transform: scale(1.02); }
+        input:focus { box-shadow: 0 0 40px var(--primary-glow); transform: scale(1.03); }
 
-        /* 气泡炸裂动画 */
-        .pop-effect {
-            position: absolute; border-radius: 50%; pointer-events: none;
-            animation: pop-anim 0.4s cubic-bezier(0, 0, 0.2, 1) forwards;
-            border: 2px solid #fff;
-        }
-        @keyframes pop-anim {
-            0% { transform: scale(0.8); opacity: 1; }
-            100% { transform: scale(2.5); opacity: 0; }
-        }
-
-        /* 装饰粒子样式 */
         .particle {
-            position: absolute; background: #fff; border-radius: 50%;
-            pointer-events: none; animation: fly 0.6s ease-out forwards;
+            position: absolute; border-radius: 50%; pointer-events: none;
+            animation: fly 0.6s ease-out forwards;
         }
-        @keyframes fly {
-            to { transform: translate(var(--x), var(--y)); opacity: 0; }
-        }
+        @keyframes fly { to { transform: translate(var(--x), var(--y)); opacity: 0; } }
     </style>
 </head>
 <body>
+
+<div id="star-field"></div>
+
+<!-- 背景星球：橙色 -->
+<div class="planet-container" style="left: 15%; bottom: 15%;">
+    <div class="planet" style="--color: #ff8c42; width: 100px; height: 100px;"></div>
+    <div class="ring" style="--angle: -20deg; width: 180px;"></div>
+</div>
+
+<!-- 背景星球：紫色 -->
+<div class="planet-container" style="right: 10%; top: 15%;">
+    <div class="planet" style="--color: #7a00ff; width: 60px; height: 60px;"></div>
+    <div class="ring" style="--angle: 30deg; width: 120px; height: 30px;"></div>
+</div>
+
+<!-- 背景星球：蓝色小行星 -->
+<div class="planet-container" style="right: 40%; bottom: 10%;">
+    <div class="planet" style="--color: #00d8ff; width: 40px; height: 40px;"></div>
+</div>
+
+<!-- 升级版精致宇航员 -->
+<div class="astronaut">
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <!-- 背包 -->
+        <rect x="25" y="35" width="50" height="40" rx="5" fill="#ccc" />
+        <!-- 身体 -->
+        <path d="M35 30 H65 V70 Q65 80 55 80 H45 Q35 80 35 70 Z" fill="#fff" />
+        <!-- 头盔 -->
+        <circle cx="50" cy="30" r="22" fill="#fff" />
+        <rect x="35" y="20" width="30" height="18" rx="8" fill="#333" /> <!-- 面罩 -->
+        <rect x="38" y="22" width="10" height="5" rx="2" fill="rgba(255,255,255,0.2)" /> <!-- 反光 -->
+        <!-- 腿 -->
+        <rect x="37" y="75" width="10" height="15" rx="3" fill="#fff" />
+        <rect x="53" y="75" width="10" height="15" rx="3" fill="#fff" />
+        <!-- 手 -->
+        <path d="M35 45 Q20 50 25 60" stroke="#fff" stroke-width="8" stroke-linecap="round" fill="none" />
+        <path d="M65 45 Q80 50 75 60" stroke="#fff" stroke-width="8" stroke-linecap="round" fill="none" />
+    </svg>
+</div>
+
+<!-- 漂浮UFO -->
+<div class="ufo-fixed">🛸</div>
 
 <h1>TypeBurst AI: Space Rush</h1>
 
@@ -79,7 +164,7 @@
 </div>
 
 <div id="input-container">
-    <input type="text" id="userInput" placeholder="敲击键盘，点亮夜空..." autofocus autocomplete="off">
+    <input type="text" id="userInput" placeholder="输入答案，击碎陨石..." autofocus autocomplete="off">
 </div>
 
 <script>
@@ -93,48 +178,58 @@
     let bubbles = [];
     let meteors = [];
 
-    // 初始化背景Canvas大小
+    // 生成背景装饰星
+    function createStars() {
+        const field = document.getElementById('star-field');
+        for (let i = 0; i < 120; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            const size = Math.random() * 2 + 1;
+            star.style.width = size + 'px';
+            star.style.height = size + 'px';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.setProperty('--duration', (Math.random() * 3 + 2) + 's');
+            field.appendChild(star);
+        }
+    }
+    createStars();
+
     function resizeBg() {
-        bgCanvas.width = 900;
-        bgCanvas.height = 600;
+        bgCanvas.width = 900; bgCanvas.height = 600;
     }
     resizeBg();
 
-    // --- 音效引擎 ---
+    // 简单音效
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playPopSound() {
         if (audioCtx.state === 'suspended') audioCtx.resume();
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(1000, audioCtx.currentTime);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
         osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
-        gain.gain.setValueAtTime(0.6, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
         osc.connect(gain); gain.connect(audioCtx.destination);
         osc.start(); osc.stop(audioCtx.currentTime + 0.1);
     }
 
-    // --- 流星背景逻辑 ---
     class Meteor {
-        constructor() {
-            this.reset();
-        }
+        constructor() { this.reset(); }
         reset() {
-            this.x = Math.random() * bgCanvas.width;
-            this.y = -20;
-            this.len = Math.random() * 80 + 20;
-            this.speed = Math.random() * 4 + 2;
-            this.opacity = Math.random() * 0.5 + 0.2;
+            this.x = Math.random() * bgCanvas.width + 200;
+            this.y = -50;
+            this.len = Math.random() * 80 + 40;
+            this.speed = Math.random() * 5 + 3;
         }
         update() {
-            this.x -= this.speed;
-            this.y += this.speed;
+            this.x -= this.speed; this.y += this.speed;
             if (this.y > bgCanvas.height || this.x < -100) this.reset();
         }
         draw() {
-            bgCtx.strokeStyle = `rgba(255, 255, 255, ${this.opacity})`;
-            bgCtx.lineWidth = 2;
+            bgCtx.strokeStyle = "rgba(255,255,255,0.3)";
+            bgCtx.lineWidth = 1;
             bgCtx.beginPath();
             bgCtx.moveTo(this.x, this.y);
             bgCtx.lineTo(this.x + this.len, this.y - this.len);
@@ -143,83 +238,68 @@
     }
     for(let i=0; i<6; i++) meteors.push(new Meteor());
 
-    // --- 游戏气泡逻辑 ---
     class Bubble {
         constructor(text, answer) {
             this.text = text;
             this.answer = answer.toString();
-            ctx.font = "bold 20px Arial";
-            this.width = Math.max(110, ctx.measureText(text).width + 60);
-            this.height = 60;
-            this.isLong = text.length > 8;
+            this.width = Math.max(120, text.length * 15 + 40);
+            this.height = 55;
             this.x = Math.random() * (canvas.width - this.width) + this.width/2;
             this.y = -50;
-            this.speed = this.isLong ? 0.4 : 0.8;
-            this.hue = Math.random() * 360;
-            this.color = `hsla(${this.hue}, 70%, 70%, 0.9)`;
+            this.speed = 0.8 + Math.random() * 0.5;
+            this.color = `hsla(${Math.random() * 360}, 70%, 75%, 0.9)`;
         }
         draw() {
             ctx.save();
-            ctx.beginPath();
-            ctx.roundRect(this.x - this.width/2, this.y - this.height/2, this.width, this.height, 30);
-            ctx.fillStyle = this.color;
+            ctx.translate(this.x, this.y);
             ctx.shadowBlur = 15; ctx.shadowColor = this.color;
+            ctx.beginPath();
+            ctx.roundRect(-this.width/2, -this.height/2, this.width, this.height, 25);
+            ctx.fillStyle = this.color;
             ctx.fill();
-            ctx.strokeStyle = "rgba(255,255,255,0.8)";
-            ctx.stroke();
-            ctx.fillStyle = "#1a1a2e"; ctx.font = "bold 18px 'Microsoft YaHei'";
-            ctx.textAlign = "center"; ctx.textBaseline = "middle";
-            ctx.fillText(this.text, this.x, this.y);
+            ctx.fillStyle = "#111";
+            ctx.font = "bold 18px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(this.text, 0, 0);
             ctx.restore();
         }
         update() { this.y += this.speed; }
     }
 
-    // 粒子爆炸效果
-    function createBurstParticles(x, y, color) {
+    function createBurst(x, y, color) {
         const stage = document.getElementById('game-stage');
-        for (let i = 0; i < 12; i++) {
+        for (let i = 0; i < 10; i++) {
             const p = document.createElement('div');
             p.className = 'particle';
-            const size = Math.random() * 6 + 2;
-            p.style.width = size + 'px';
-            p.style.height = size + 'px';
-            p.style.left = x + 'px';
-            p.style.top = y + 'px';
+            p.style.width = p.style.height = Math.random() * 6 + 2 + 'px';
+            p.style.left = x + 'px'; p.style.top = y + 'px';
             p.style.background = color;
-            const tx = (Math.random() - 0.5) * 200;
-            const ty = (Math.random() - 0.5) * 200;
-            p.style.setProperty('--x', tx + 'px');
-            p.style.setProperty('--y', ty + 'px');
+            p.style.setProperty('--x', (Math.random() - 0.5) * 200 + 'px');
+            p.style.setProperty('--y', (Math.random() - 0.5) * 200 + 'px');
             stage.appendChild(p);
             setTimeout(() => p.remove(), 600);
         }
     }
 
     async function fetchAiQuestion() {
-        if (bubbles.some(b => b.isLong)) return;
+        if (bubbles.length > 6) return;
         try {
             const res = await fetch(`/api/question?type=${encodeURIComponent(typeSelect.value)}`);
             const data = await res.json();
-            if (data.content) {
-                if (data.content.length > 8 && bubbles.length > 0) return;
-                bubbles.push(new Bubble(data.content, data.answer));
-            }
+            if (data.content) bubbles.push(new Bubble(data.content, data.answer));
         } catch (e) {}
     }
     setInterval(fetchAiQuestion, 2000);
 
     function animate() {
-        // 背景动画
         bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
         meteors.forEach(m => { m.update(); m.draw(); });
-
-        // 游戏动画
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         for (let i = bubbles.length - 1; i >= 0; i--) {
             const b = bubbles[i];
             b.update(); b.draw();
-            if (b.y - 100 > canvas.height) bubbles.splice(i, 1);
+            if (b.y > canvas.height + 50) bubbles.splice(i, 1);
         }
         requestAnimationFrame(animate);
     }
@@ -230,7 +310,7 @@
         if (idx !== -1) {
             const b = bubbles[idx];
             playPopSound();
-            createBurstParticles(b.x, b.y, b.color);
+            createBurst(b.x, b.y, b.color);
             bubbles.splice(idx, 1);
             userInput.value = '';
         }
