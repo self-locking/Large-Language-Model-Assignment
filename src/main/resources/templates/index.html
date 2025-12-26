@@ -2,195 +2,126 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <title>TypeBurst AI - 气泡消除大作战</title>
+    <title>TypeBurst AI - 极致手速</title>
     <style>
-        body {
-            display: flex; flex-direction: column; align-items: center;
-            background-color: #1a1a2e; color: white; font-family: 'Microsoft YaHei', sans-serif;
-            margin: 0; padding: 20px;
-        }
-        h1 { margin-bottom: 10px; color: #00d8ff; text-shadow: 0 0 10px rgba(0,216,255,0.5); }
-
-        /* 顶部控制面板 */
-        #control-panel {
-            margin-bottom: 15px;
-            display: flex; gap: 10px;
-        }
-        select {
-            padding: 8px; border-radius: 5px; background: #16213e; color: white; border: 1px solid #00d8ff;
-        }
-
-        /* 游戏区域 */
-        #game-stage {
-            position: relative; width: 800px; height: 550px;
-            background: linear-gradient(to bottom, #16213e, #0f3460);
-            border: 4px solid #00d8ff; border-radius: 15px;
-            box-shadow: 0 0 30px rgba(0,216,255,0.2);
-            overflow: hidden;
-        }
-
-        #ui-panel { margin-top: 25px; text-align: center; }
-        input {
-            padding: 15px 25px; font-size: 22px; border-radius: 30px;
-            border: 2px solid #00d8ff; outline: none; width: 300px;
-            background: rgba(255,255,255,0.9); color: #1a1a2e;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-            transition: all 0.3s;
-        }
-        input:focus { box-shadow: 0 0 20px rgba(0,216,255,0.6); }
-
-        .stats { font-size: 24px; margin-bottom: 15px; font-weight: bold; }
-        #score { color: #4ee44e; }
-        #missed { color: #ff4d4d; }
+        /* 样式保持一致，仅调整部分细节 */
+        body { display: flex; flex-direction: column; align-items: center; background-color: #1a1a2e; color: white; font-family: 'Microsoft YaHei'; margin: 0; padding: 20px; }
+        #game-stage { position: relative; width: 900px; height: 600px; background: #0f3460; border: 4px solid #00d8ff; border-radius: 15px; overflow: hidden; }
+        #control-panel { margin-bottom: 15px; display: flex; gap: 10px; }
+        select { padding: 8px; border-radius: 5px; background: #16213e; color: white; border: 1px solid #00d8ff; }
+        input { padding: 15px; font-size: 20px; width: 400px; border-radius: 30px; border: 2px solid #00d8ff; text-align: center; }
+        .stats { font-size: 24px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
-<h1>TypeBurst AI</h1>
+<h1>TypeBurst AI: Speed Edition</h1>
 
 <div id="control-panel">
-    <label>题目类型：</label>
+    <label>模式：</label>
     <select id="typeSelect">
-        <option value="成语">成语填空</option>
-        <option value="古诗词">古诗名句</option>
-        <option value="英语单词">英语翻译</option>
-        <option value="数学">趣味数学</option>
-    </select>
-    <label>难度：</label>
-    <select id="diffSelect">
-        <option value="简单">简单</option>
-        <option value="中等">中等</option>
-        <option value="困难">专家</option>
-    </select>
+        <option value="单词手速">单词手速 (English)</option>
+        <option value="中文手速">中文手速 (Chinese)</option>
+        <option value="趣味数学">趣味数学 (Math)</option> </select>
 </div>
 
-<div class="stats">
-    得分: <span id="score">0</span> | 失败: <span id="missed">0</span> / 10
-</div>
-
-<div id="game-stage">
-    <canvas id="gameCanvas" width="800" height="550"></canvas>
-</div>
-
-<div id="ui-panel">
-    <input type="text" id="userInput" placeholder="输入答案后按回车..." autofocus autocomplete="off">
-</div>
+<div class="stats">得分: <span id="score">0</span> | 失败: <span id="missed">0</span> / 10</div>
+<div id="game-stage"><canvas id="gameCanvas" width="900" height="600"></canvas></div>
+<div id="ui-panel"><input type="text" id="userInput" placeholder="观察气泡，快速敲击..." autofocus></div>
 
 <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const userInput = document.getElementById('userInput');
-    const scoreElement = document.getElementById('score');
-    const missedElement = document.getElementById('missed');
     const typeSelect = document.getElementById('typeSelect');
-    const diffSelect = document.getElementById('diffSelect');
 
-    let score = 0;
-    let missed = 0;
-    let bubbles = [];
-    let gameActive = true;
+    let score = 0, missed = 0, bubbles = [], gameActive = true;
 
     class Bubble {
         constructor(text, answer) {
             this.text = text;
             this.answer = answer;
-            this.x = Math.random() * (canvas.width - 160) + 80;
-            this.y = -60;
-            this.speed = Math.random() * 0.5 + 0.4; // 速度稍微调慢，因为AI题需要思考
-            this.radius = 65; // 气泡调大一点，容纳文字
-            this.color = `hsla(${Math.random() * 360}, 70%, 70%, 0.9)`;
+            this.isLong = text.length > 6;
+
+            // 动态计算尺寸：根据文字长度调整宽度
+            ctx.font = "bold 20px Arial";
+            const textWidth = ctx.measureText(text).width;
+            this.width = textWidth + 40;
+            this.height = 60;
+
+            this.x = Math.random() * (canvas.width - this.width) + this.width/2;
+            this.y = -50;
+
+            // 逻辑：长句子下落变慢
+            this.speed = this.isLong ? 0.3 : 0.6;
+            this.color = this.isLong ? "rgba(0, 216, 255, 0.8)" : "rgba(78, 228, 78, 0.8)";
         }
+
         draw() {
+            // 绘制胶囊型气泡
             ctx.beginPath();
-            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.roundRect(this.x - this.width/2, this.y - this.height/2, this.width, this.height, 30);
             ctx.fillStyle = this.color;
             ctx.fill();
             ctx.strokeStyle = "white";
             ctx.lineWidth = 2;
             ctx.stroke();
-            ctx.closePath();
 
             ctx.fillStyle = "#1a1a2e";
-            ctx.font = "bold 18px Arial";
+            ctx.font = "bold 20px Arial";
             ctx.textAlign = "center";
-            // 绘制题目文字
             ctx.fillText(this.text, this.x, this.y + 7);
         }
         update() { this.y += this.speed; }
     }
 
-    // --- 核心：从 Java 后端获取 AI 题目 ---
     async function fetchAiQuestion() {
         if (!gameActive) return;
 
-        const type = typeSelect.value;
-        const diff = diffSelect.value;
+        // 特殊规则：如果屏幕上有长句子，不产生新气泡
+        if (bubbles.some(b => b.isLong)) return;
 
         try {
-            // 请求后端 API
-            const response = await fetch(`/api/question?type=${encodeURIComponent(type)}&diff=${encodeURIComponent(diff)}`);
-            if (response.ok) {
-                const data = await response.json();
-                // 只有当 AI 返回了有效题目时才添加气泡
-                if (data.content && data.answer) {
-                    bubbles.push(new Bubble(data.content, data.answer));
-                }
+            const res = await fetch(`/api/question?type=${encodeURIComponent(typeSelect.value)}&diff=简单`);
+            const data = await res.json();
+            if (data.content) {
+                // 如果新生成的题是长句，且屏幕已有气泡，则跳过本次生成
+                const isNewLong = data.content.length > 6;
+                if (isNewLong && bubbles.length > 0) return;
+
+                bubbles.push(new Bubble(data.content, data.answer));
             }
-        } catch (error) {
-            console.error("AI 出题失败:", error);
-        }
+        } catch (e) { console.error(e); }
     }
 
-    // 每 3.5 秒产生一个新气泡（给 AI 留出响应时间）
-    setInterval(fetchAiQuestion, 3500);
+    setInterval(fetchAiQuestion, 3000);
 
     function animate() {
         if (!gameActive) return;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        bubbles.forEach((bubble, index) => {
-            bubble.update();
-            bubble.draw();
-
-            // 触底判定
-            if (bubble.y - bubble.radius > canvas.height) {
-                bubbles.splice(index, 1);
+        bubbles.forEach((b, i) => {
+            b.update();
+            b.draw();
+            if (b.y - 30 > canvas.height) {
+                bubbles.splice(i, 1);
                 missed++;
-                missedElement.innerText = missed;
-
-                if (missed >= 10) {
-                    gameActive = false;
-                    alert("游戏结束！最终得分: " + score);
-                    location.reload();
-                }
+                document.getElementById('missed').innerText = missed;
+                if (missed >= 10) { gameActive = false; alert("游戏结束！"); location.reload(); }
             }
         });
         requestAnimationFrame(animate);
     }
 
-    // 输入框回车判定
-    userInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            const val = userInput.value.trim();
-            if (!val) return;
-
-            // 寻找屏幕上答案匹配的最底部的气泡
-            const foundIndex = bubbles.findIndex(b => b.answer === val);
-
-            if (foundIndex !== -1) {
-                // 答对了
-                bubbles.splice(foundIndex, 1);
-                score += 10;
-                scoreElement.innerText = score;
-                userInput.value = '';
-                // 简单的成功反馈效果（输入框闪绿光）
-                userInput.style.borderColor = "#4ee44e";
-                setTimeout(() => userInput.style.borderColor = "#00d8ff", 200);
-            } else {
-                // 答错了
-                userInput.style.borderColor = "#ff4d4d";
-                setTimeout(() => userInput.style.borderColor = "#00d8ff", 200);
-            }
+    userInput.addEventListener('input', () => {
+        const val = userInput.value.trim();
+        // 实时匹配逻辑：手速模式通常输入正确立刻消失
+        const idx = bubbles.findIndex(b => b.answer === val);
+        if (idx !== -1) {
+            bubbles.splice(idx, 1);
+            score += 10;
+            document.getElementById('score').innerText = score;
+            userInput.value = '';
         }
     });
 
