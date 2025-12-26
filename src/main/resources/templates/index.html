@@ -117,10 +117,8 @@
 </head>
 <body onclick="startBGM()">
 
-<!-- 音乐开关按钮 -->
 <button id="music-ctrl" onclick="toggleMusic(event)">🎵 音乐: 开启</button>
 
-<!-- 背景音乐 -->
 <audio id="bg-music" loop preload="auto">
     <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
 </audio>
@@ -183,51 +181,81 @@
     const bgCtx = bgCanvas.getContext('2d');
     const userInput = document.getElementById('userInput');
     const typeSelect = document.getElementById('typeSelect');
-
     const bgMusic = document.getElementById('bg-music');
     const musicBtn = document.getElementById('music-ctrl');
 
-    // --- 音量调节：设置为0.05（非常轻柔） ---
     bgMusic.volume = 0.05;
-
     let bubbles = [];
     let meteors = [];
     let audioCtx;
 
-    // --- 优化后的音乐功能 ---
-    function startBGM() {
-        // 初始化音频上下文（用于炸裂音效）
-        if (!audioCtx) {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // --- 核心修改：升级版流星类 ---
+    class Meteor {
+        constructor() { this.reset(); }
+        reset() {
+            // 从右上方区域随机产生
+            this.x = Math.random() * (bgCanvas.width + 400);
+            this.y = -100;
+            // 流星长度加长，看起来更丝滑
+            this.len = Math.random() * 150 + 80;
+            // 速度加快
+            this.speed = Math.random() * 10 + 5;
+            // 发光颜色微调
+            this.opacity = Math.random() * 0.5 + 0.3;
         }
-        if (audioCtx.state === 'suspended') audioCtx.resume();
+        update() {
+            // 向左下方斜向滑行
+            this.x -= this.speed;
+            this.y += this.speed;
+            if (this.y > bgCanvas.height + 100 || this.x < -100) this.reset();
+        }
+        draw() {
+            bgCtx.save();
+            // 1. 创建线性渐变：从头部（亮白）到尾部（完全透明）
+            // 渐变方向与运动方向一致
+            const gradient = bgCtx.createLinearGradient(
+                this.x, this.y,
+                this.x + this.len, this.y - this.len
+            );
+            gradient.addColorStop(0, `rgba(255, 255, 255, ${this.opacity})`); // 头部：明亮
+            gradient.addColorStop(0.1, `rgba(0, 216, 255, ${this.opacity * 0.8})`); // 颈部：带点科幻蓝
+            gradient.addColorStop(1, "rgba(255, 255, 255, 0)"); // 尾部：消失
 
-        // 只有在停止时才尝试播放，防止冲突
-        if (bgMusic.paused) {
-            bgMusic.play().catch(e => {});
+            // 2. 绘制流星轨迹
+            bgCtx.strokeStyle = gradient;
+            bgCtx.lineWidth = 2; // 稍微加粗一点
+            bgCtx.lineCap = "round";
+            bgCtx.beginPath();
+            bgCtx.moveTo(this.x, this.y);
+            bgCtx.lineTo(this.x + this.len, this.y - this.len);
+            bgCtx.stroke();
+
+            // 3. 绘制流星头部发光点（核心：这让它看起来像在飞）
+            bgCtx.beginPath();
+            bgCtx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+            bgCtx.shadowBlur = 10;
+            bgCtx.shadowColor = "#00d8ff";
+            bgCtx.arc(this.x, this.y, 1.2, 0, Math.PI * 2);
+            bgCtx.fill();
+            bgCtx.restore();
         }
     }
+    // 增加流星密度，从6个增加到12个
+    for(let i=0; i<12; i++) meteors.push(new Meteor());
 
-    // 监听音乐停止/卡顿情况，自动恢复
-    bgMusic.addEventListener('stalled', () => {
-        if (!bgMusic.paused) bgMusic.play();
-    });
+    // --- 以下为原有逻辑 ---
+    function startBGM() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        if (bgMusic.paused) bgMusic.play().catch(e => {});
+    }
 
-    // 确保无限循环播放
-    bgMusic.addEventListener('ended', () => {
-        bgMusic.currentTime = 0;
-        bgMusic.play();
-    });
+    bgMusic.addEventListener('ended', () => { bgMusic.currentTime = 0; bgMusic.play(); });
 
     function toggleMusic(e) {
         e.stopPropagation();
-        if (bgMusic.paused) {
-            bgMusic.play();
-            musicBtn.innerText = "🎵 音乐: 开启";
-        } else {
-            bgMusic.pause();
-            musicBtn.innerText = "🔇 音乐: 关闭";
-        }
+        if (bgMusic.paused) { bgMusic.play(); musicBtn.innerText = "🎵 音乐: 开启"; }
+        else { bgMusic.pause(); musicBtn.innerText = "🔇 音乐: 关闭"; }
     }
 
     function createStars() {
@@ -236,16 +264,13 @@
             const star = document.createElement('div');
             star.className = 'star';
             const size = Math.random() * 2 + 1;
-            star.style.width = size + 'px';
-            star.style.height = size + 'px';
-            star.style.left = Math.random() * 100 + '%';
-            star.style.top = Math.random() * 100 + '%';
+            star.style.width = size + 'px'; star.style.height = size + 'px';
+            star.style.left = Math.random() * 100 + '%'; star.style.top = Math.random() * 100 + '%';
             star.style.setProperty('--duration', (Math.random() * 3 + 2) + 's');
             field.appendChild(star);
         }
     }
     createStars();
-
     function resizeBg() { bgCanvas.width = 900; bgCanvas.height = 600; }
     resizeBg();
 
@@ -261,29 +286,6 @@
         osc.connect(gain); gain.connect(audioCtx.destination);
         osc.start(); osc.stop(audioCtx.currentTime + 0.1);
     }
-
-    class Meteor {
-        constructor() { this.reset(); }
-        reset() {
-            this.x = Math.random() * bgCanvas.width + 200;
-            this.y = -50;
-            this.len = Math.random() * 80 + 40;
-            this.speed = Math.random() * 5 + 3;
-        }
-        update() {
-            this.x -= this.speed; this.y += this.speed;
-            if (this.y > bgCanvas.height || this.x < -100) this.reset();
-        }
-        draw() {
-            bgCtx.strokeStyle = "rgba(255,255,255,0.3)";
-            bgCtx.lineWidth = 1;
-            bgCtx.beginPath();
-            bgCtx.moveTo(this.x, this.y);
-            bgCtx.lineTo(this.x + this.len, this.y - this.len);
-            bgCtx.stroke();
-        }
-    }
-    for(let i=0; i<6; i++) meteors.push(new Meteor());
 
     class Bubble {
         constructor(text, answer) {
