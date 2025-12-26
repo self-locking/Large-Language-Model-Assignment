@@ -122,12 +122,12 @@
             "单词手速": [
                 {t: "horizon", a: "horizon"}, {t: "universe", a: "universe"},
                 {t: "to the moon", a: "to the moon"}, {t: "sparkle", a: "sparkle"},
-                {t: "everything is you", a: "everything is you"}, {t: "meteor", a: "meteor"},
-                {t: "galaxy quest", a: "galaxy quest"}, {t: "deep space", a: "deep space"},
-                {t: "heartbeat", a: "heartbeat"}, {t: "counting stars", a: "counting stars"},
+                {t: "everything is you", a: "everything is you"}, {t: "meter", a: "meter"},
+                {t: "technology", a: "technology"}, {t: "space", a: "space"},
+                {t: "heartbeat", a: "heartbeat"}, {t: "star", a: "star"},
                 {t: "choose", a: "choose"}, {t: "heart", a: "heart"},
                 {t: "long", a: "long"}, {t: "why", a: "why"},
-                {t: "how are you", a: "how are you"}, {t: "ring", a: "ring"},
+                {t: "flip", a: "flip"}, {t: "ring", a: "ring"},
                 {t: "however", a: "however"}, {t: "fate", a: "fate"}
             ],
             "中文手速": [
@@ -135,7 +135,7 @@
                 {t: "琴瑟和鸣", a: "琴瑟和鸣"}, {t: "比翼双飞", a: "比翼双飞"},
                 {t: "山盟海誓", a: "山盟海誓"}, {t: "如影随形", a: "如影随形"},
                 {t: "左邻右舍", a: "左邻右舍"}, {t: "朝思暮想", a: "朝思暮想"},
-                {t: "春风十里", a: "春风十里"}, {t: "浪漫至极", a: "浪漫至极"},
+                {t: "春风十里", a: "春风十里"}, {t: "良辰凤褂", a: "良辰凤褂"},
                 {t: "昨天", a: "昨天"}, {t: "太阳", a: "太阳"},
                 {t: "明天", a: "明天"}, {t: "后退", a: "后退"},
                 {t: "玉玺", a: "玉玺"}, {t: "衣服", a: "衣服"},
@@ -198,18 +198,108 @@
         }
     }
 
+    const FallbackPool = {
+        "单词手速": [
+            "orbit","planet","galaxy","cosmic","stellar","lunar","solar","nebula","meteor","gravity",
+            "horizon","universe","celestial","infinite","eternal","silence","destiny","romance","twilight","midnight",
+            "starlight","sunrise","sunset","eclipse","comet","asteroid","vacuum","spectrum","quantum","timeless",
+            "serenity","whisper","promise","memory","fantasy","illusion","emotion","passion","longing","affection",
+            "harmony","freedom","journey","wander","explore","arrival","departure","beyond","unknown","eternity",
+            "radiant","brilliant","luminous","shadow","echo","signal","distance","future","ancient","origin",
+            "chaos","order","balance","motion","stillness","velocity","moment","instant","forever","gravity",
+            "constell","observer","pioneer","frontier","shelter","dreamer","seeker","watcher","keeper","voyager",
+            "stellarwind","nightfall","daybreak","starshine","sunbeam","moonlight","starlane","lightyear","cometary","nebular",
+            "cosmos","orbiting","asterism","supernova","luminous","celestia","gravitywave","solstice","equinox","meteorite",
+            "planetesimal","galactic","interstellar","extraterrestrial","cosmology","astronomy","telescope","satellite","spaceship","spacewalk",
+            "spaceflight","universewide","intergalactic","constellation","starcluster","nebulae","quasar","pulsar","blackhole","wormhole",
+            "eventhorizon","spacetime","relativity","singularity","gravitywell","darkmatter","stardust","planetscape","asteroidbelt","moonscape",
+            "planetary","stellarsystem","lightcurve","radiation","spectrometer","telescopic","observatory","cosmonaut","astronaut","orbital",
+            "trajectory","celestialbody","aphelion","perihelion","zenith","nadir","equatorial","polar","luminosity","magnitude",
+            "radiowave","infrared","ultraviolet","xray","gamma","microwave","cosmicray","gravitation","acceleration","velocityvector",
+            "momentum","inertia","centrifugal","centripetal","oscillation","resonance","frequency","wavelength","amplitude","phase",
+            "energy","potential","kinetic","mass","density","pressure","temperature","magnetism","electricity","charge",
+            "voltage","current","resistance","capacitance","inductance","circuit","signal","waveform","spectrum","modulation",
+            "emission","absorption","reflection","refraction","diffraction","interference","polarization","scattering","dispersion","convection",
+            "radiationpressure","turbulence","vortex","fluid","plasma","ionization","fusion","fission","reaction","catalyst",
+            "equilibrium","stability","perturbation","chaos","fractal","pattern","symmetry","asymmetry","geometry","topology",
+            "dimension","continuum","hyperspace","multiverse","parallel","alternate","timeline","causality","entropy","probability",
+            "statistics","combinatorics","algebra","calculus","derivative","integral","matrix","vector","tensor","scalar",
+            "function","equation","algorithm","program","network","system","module","process","thread","cycle",
+            "loop","iteration","recursion","condition","variable","constant","parameter","argument","interface","object",
+            "class","method","property","attribute","instance","inheritance","polymorphism","encapsulation","abstraction","constructor",
+            "destructor","exception","error","debug","compile","execute","runtime","memory","storage","input",
+            "output","display","keyboard","mouse","sensor","camera","microphone","speaker","signal","channel",
+            "frequencyband","bandwidth","protocol","packet","transmission","encryption","authentication","authorization","session","connection",
+            "server","client","host","node","router","switch","gateway","firewall","database","query",
+            "record","field","index","key","value","array","list","stack","queue","tree","graph",
+            "nodeelement","edge","vertex","path","cycle","weight","cost","distance","shortest","longest",
+            "maximum","minimum","average","median","mode","variance","standard","deviation","probabilistic","deterministic",
+            "random","sample","population","distribution","density","frequency","histogram","chart","graphical","visualization"
+        ],
+        "中文手速": [
+            "星辰","银河","星海","宇宙","天际","流星","月光","星光","星轨","星云",
+            "苍穹","夜空","晨曦","暮色","黎明","永恒","瞬间","远方","彼岸","未来",
+            "记忆","幻想","情感","浪漫","心动","悸动","低语","回声","旅途","漂流",
+            "起点","终点","相遇","别离","守望","等待","希望","自由","梦想","命运",
+            "轨迹","边界","未知","深空","虚空","静谧","光芒","微光","暗影","余晖",
+            "呼吸","心跳","脉冲","共鸣","信号","距离","方向","坐标","瞬息","永夜",
+            "长空","星火","天穹","星河","星雨","月影","星语","光年","星途","宇航",
+            "星河漫游","银河彼端","无垠星空","光年之外","深空回响","星际旅途","宇宙回声","漫步星河","仰望星空","流光溢彩",
+            "晨光","暮光","星辉","月影","流光","幻梦","幻影","幻彩","苍茫","无垠",
+            "天穹","苍蓝","碧空","晴空","夜幕","星河","星海","星域","星云","星际",
+            "宇宙","银河","苍穹","星辉","光辉","光芒","余光","明亮","皎洁","灿烂",
+            "微光","闪烁","流光","闪耀","耀眼","光耀","辉煌","璀璨","亮丽","明亮",
+            "月光","月辉","月影","月华","月色","月白","月明","银光","银辉","银色",
+            "晨曦","朝阳","朝辉","日光","阳光","日辉","晨光","曙光","黎明","初晨",
+            "暮色","黄昏","夕阳","落日","晚霞","夕辉","残阳","夕照","夜色","夜幕",
+            "幽暗","深夜","漆黑","黑夜","黯淡","静夜","长夜","永夜","深渊","虚空",
+            "梦境","幻境","幻梦","幻想","奇境","仙境","秘境","星境","云境","海境",
+            "旅途","征程","远行","漂流","跋涉","探险","冒险","征战","航行","行程",
+            "起点","终点","路程","旅程","远方","彼岸","前方","归途","归宿","栖息",
+            "守望","等待","守护","期待","眺望","凝望","注视","凝视","观望","瞭望",
+            "思念","牵挂","怀念","回忆","记忆","往事","过去","昨日","前世","今生",
+            "缘分","命运","宿命","际遇","机缘","巧合","偶然","必然","注定","安排",
+            "希望","梦想","愿望","祈愿","企盼","向往","追寻","追逐","渴望","憧憬",
+            "自由","解放","独立","无拘","无束","逍遥","自在","放飞","翱翔","飞翔",
+            "心动","悸动","悸心","心潮","情感","爱意","恋情","爱情","思念","牵挂",
+            "浪漫","情调","温柔","柔情","蜜意","情怀","深情","浓情","痴情","真情",
+            "低语","耳语","轻声","细语","呢喃","呢喃细语","窃语","私语","暗语","密语",
+            "回声","回响","余响","反响","共鸣","共振","响动","声息","声波","波动",
+            "旅途","旅程","征途","征程","远行","跋涉","漂流","探险","冒险","远方",
+            "起点","终点","前行","归途","归宿","路程","道路","路径","路线","方位",
+            "守望","守护","注视","眺望","瞭望","关注","目光","凝望","注目","凝视",
+            "等待","企盼","期盼","盼望","等待中","期待","守候","守望者","追寻","寻觅",
+            "希望","梦想","渴望","愿望","祈愿","憧憬","企盼","期望","信念","目标",
+            "自由","逍遥","翱翔","飞翔","解放","奔放","无拘","无束","自在","放飞",
+            "心跳","呼吸","脉动","悸动","跳动","振动","波动","律动","共鸣","悸心",
+            "星火","火光","光焰","辉光","余辉","闪光","闪烁","微光","亮光","亮点",
+            "长空","苍穹","天穹","天空","苍茫","辽阔","无垠","广阔","浩瀚","无际",
+            "深空","虚空","无垠","寂静","静谧","幽深","深邃","空灵","悠远","无限",
+            "幻彩","幻影","幻境","幻梦","梦境","奇境","仙境","秘境","秘境之地","星境之地",
+            "光年","时光","岁月","流年","年华","晨光","晚霞","晨曦","暮色","日暮",
+            "漫步","徜徉","游历","远行","漂泊","漂流","跋涉","旅行","征程","远方",
+            "仰望","俯瞰","注视","凝视","眺望","瞭望","观察","守望","追寻","探索",
+            "深渊","虚空","无尽","无垠","长夜","永夜","长空","苍穹","天际","远方",
+            "星河漫游","银河彼端","无垠星空","光年之外","深空回响","星际旅途","宇宙回声","漫步星河","仰望星空","流光溢彩"
+        ]
+    };
+
     // ========================================
     // 硅基流动 AI 出题函数
     // ========================================
     async function fetchAiQuestion() {
+        // 限制屏幕上气泡数量，避免卡顿
         if (gameEnded || bubbles.length > 6) return;
 
         if (!isStoryMode) {
-            // 正常模式：使用硅基流动 AI 出题
+            // 【正常模式】：使用硅基流动 AI 出题，失败时调用 FallbackPool
+            let nextText = "";
             const isEnglish = typeSelect.value === "单词手速";
+            const currentFallbackList = FallbackPool[typeSelect.value]; // 获取对应语言的兜底词库
+
             const systemPrompt = isEnglish
-                ? "You are a word generator. Generate ONE simple English word related to space, romance, or stars. Output ONLY the word, nothing else."
-                : "你是一个词语生成器。生成一个4字以内的与太空、浪漫或星辰相关的中文词语。只输出词语本身，不要其他内容。";
+                ? "You are a word generator. Generate ONE simple English word related to space, romance, or stars. Output ONLY the word, nothing else. Do not repeat"
+                : "你是一个词语生成器。生成一个2字词语或4字成语，可以是与太空、浪漫或星辰相关的中文词语。只输出词语本身，不要其他内容，尽量不重复";
 
             try {
                 const response = await fetch(SILICONFLOW_API_URL, {
@@ -221,14 +311,8 @@
                     body: JSON.stringify({
                         model: "Qwen/Qwen2.5-7B-Instruct",
                         messages: [
-                            {
-                                role: "system",
-                                content: systemPrompt
-                            },
-                            {
-                                role: "user",
-                                content: "Generate one word now."
-                            }
+                            { role: "system", content: systemPrompt },
+                            { role: "user", content: "Generate one word now." }
                         ],
                         temperature: 0.9,
                         max_tokens: 20
@@ -243,23 +327,28 @@
                 const word = data.choices[0].message.content.trim();
 
                 // 清理可能的标点符号和多余空格
-                const cleanWord = word.replace(/[.,!?;:"']/g, '').trim();
+                nextText = word.replace(/[.,!?;:"']/g, '').trim();
 
-                bubbles.push(new Bubble(cleanWord, cleanWord));
+                // 如果 AI 抽风返回了空内容，也触发兜底
+                if (!nextText) throw new Error("Empty AI Response");
+
             } catch (e) {
-                console.error('AI出题失败:', e);
-                // 失败时使用备用词汇
-                const fallback = isEnglish ? "STAR" : "星辰";
-                bubbles.push(new Bubble(fallback, fallback));
+                console.error('AI出题失败，调用300词库兜底:', e);
+                // --- 关键改动：AI 反应不过来时，从对应语言的 300 词库中随机抽一个 ---
+                nextText = currentFallbackList[Math.floor(Math.random() * currentFallbackList.length)];
             }
+
+            bubbles.push(new Bubble(nextText, nextText));
+
         } else {
-            // 特殊模式：使用固定题库
+            // 【特殊模式】：严格执行固定题库，逻辑完全不动
             const pool = SiteConfig.specialPool[typeSelect.value];
             if (spawnCount < pool.length) {
                 const item = pool[availableIndices[spawnCount]];
                 bubbles.push(new Bubble(item.t, item.a));
                 spawnCount++;
             } else if (bubbles.length === 0 && !finalTriggered) {
+                // 题库出完后，下落特殊气泡
                 spawnFinalBubble();
             }
         }
@@ -272,13 +361,17 @@
         finalTriggered = true;
         const finalTxt = typeSelect.value === "单词手速" ? "i love you" : "我喜欢你";
         const b = new Bubble(finalTxt, finalTxt);
-        b.speed = 0.25;
+        b.x = canvas.width / 2;
+        b.speed = 0.4;
         b.isTrigger = true;
         b.color = "#ff4757";
         bubbles.push(b);
     }
 
     function triggerFinalScene() {
+        // --- 新增：修改顶部标题 ---
+        const titleElement = document.getElementById('title');
+        if (titleElement) titleElement.innerText = "Forever With You";
         gameEnded = true;
         document.body.setAttribute('data-mode', '1');
         const msgElement = document.getElementById('final-message');
