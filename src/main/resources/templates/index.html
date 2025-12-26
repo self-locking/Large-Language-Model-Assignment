@@ -2,32 +2,45 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <title>TypeBurst AI - 极致手速</title>
+    <title>TypeBurst AI - 极致打击感版</title>
     <style>
-        /* 样式保持一致，仅调整部分细节 */
         body { display: flex; flex-direction: column; align-items: center; background-color: #1a1a2e; color: white; font-family: 'Microsoft YaHei'; margin: 0; padding: 20px; }
-        #game-stage { position: relative; width: 900px; height: 600px; background: #0f3460; border: 4px solid #00d8ff; border-radius: 15px; overflow: hidden; }
+        h1 { color: #00d8ff; text-shadow: 0 0 15px rgba(0,216,255,0.8); }
+        #game-stage { position: relative; width: 900px; height: 600px; background: #0f3460; border: 4px solid #00d8ff; border-radius: 15px; overflow: hidden; box-shadow: 0 0 30px rgba(0,216,255,0.2); }
         #control-panel { margin-bottom: 15px; display: flex; gap: 10px; }
-        select { padding: 8px; border-radius: 5px; background: #16213e; color: white; border: 1px solid #00d8ff; }
-        input { padding: 15px; font-size: 20px; width: 400px; border-radius: 30px; border: 2px solid #00d8ff; text-align: center; }
-        .stats { font-size: 24px; margin-bottom: 10px; }
+        select { padding: 10px; border-radius: 5px; background: #16213e; color: white; border: 1px solid #00d8ff; cursor: pointer; }
+        input { padding: 18px; font-size: 22px; width: 480px; border-radius: 40px; border: 3px solid #00d8ff; background: #1a1a2e; color: white; text-align: center; outline: none; transition: 0.3s; box-shadow: inset 0 0 10px rgba(0,216,255,0.2); }
+        input:focus { box-shadow: 0 0 20px #00d8ff; border-color: #ffffff; }
+
+        /* 气泡炸裂 CSS 动画 */
+        .pop-effect {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: pop-anim 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            border: 3px solid #ffffff;
+            box-shadow: 0 0 20px #00d8ff;
+        }
+        @keyframes pop-anim {
+            0% { transform: scale(0.5); opacity: 1; }
+            100% { transform: scale(2.2); opacity: 0; border-width: 12px; }
+        }
     </style>
 </head>
 <body>
 
-<h1>TypeBurst AI: Speed Edition</h1>
+<h1>TypeBurst AI: High-Fidelity</h1>
 
 <div id="control-panel">
-    <label>模式：</label>
     <select id="typeSelect">
         <option value="单词手速">单词手速 (English)</option>
         <option value="中文手速">中文手速 (Chinese)</option>
-        <option value="趣味数学">趣味数学 (Math)</option> </select>
+        <option value="趣味数学">趣味数学 (Math)</option>
+    </select>
 </div>
 
-<div class="stats">得分: <span id="score">0</span> | 失败: <span id="missed">0</span> / 10</div>
 <div id="game-stage"><canvas id="gameCanvas" width="900" height="600"></canvas></div>
-<div id="ui-panel"><input type="text" id="userInput" placeholder="观察气泡，快速敲击..." autofocus></div>
+<div style="margin-top: 25px;"><input type="text" id="userInput" placeholder="感受清脆的炸裂声..." autofocus autocomplete="off"></div>
 
 <script>
     const canvas = document.getElementById('gameCanvas');
@@ -35,92 +48,126 @@
     const userInput = document.getElementById('userInput');
     const typeSelect = document.getElementById('typeSelect');
 
-    let score = 0, missed = 0, bubbles = [], gameActive = true;
+    let bubbles = [];
 
+    // --- 极致音效引擎：清脆敲击音 ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playPopSound() {
+        // 确保音频上下文在交互后启动
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        const filter = audioCtx.createBiquadFilter();
+
+        // 1. 使用三角波（Triangle），比正弦波清脆，比方波柔和
+        oscillator.type = 'triangle';
+
+        // 2. 频率从高频瞬间滑落，产生“钉”的一声
+        oscillator.frequency.setValueAtTime(1200, audioCtx.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
+
+        // 3. 高通滤波器：滤掉低频沉闷声，保留高频清脆声
+        filter.type = 'highpass';
+        filter.frequency.value = 800;
+
+        // 4. 音量包络：加大起始音量 (0.8)，极速衰减
+        gainNode.gain.setValueAtTime(0.8, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+
+        oscillator.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.15);
+    }
+
+    // 气泡逻辑
     class Bubble {
         constructor(text, answer) {
             this.text = text;
-            this.answer = answer;
-            this.isLong = text.length > 6;
-
-            // 动态计算尺寸：根据文字长度调整宽度
-            ctx.font = "bold 20px Arial";
+            this.answer = answer.toString();
+            ctx.font = "bold 22px Arial";
             const textWidth = ctx.measureText(text).width;
-            this.width = textWidth + 40;
-            this.height = 60;
-
+            this.width = Math.max(110, textWidth + 60);
+            this.height = 65;
+            this.isLong = text.length > 8;
             this.x = Math.random() * (canvas.width - this.width) + this.width/2;
-            this.y = -50;
-
-            // 逻辑：长句子下落变慢
-            this.speed = this.isLong ? 0.3 : 0.6;
-            this.color = this.isLong ? "rgba(0, 216, 255, 0.8)" : "rgba(78, 228, 78, 0.8)";
+            this.y = -60;
+            this.speed = this.isLong ? 0.4 : 1.0; // 稍微提升了普通速度
+            this.color = this.isLong ? "#00d8ff" : `hsla(${Math.random() * 360}, 80%, 75%, 1)`;
         }
 
         draw() {
-            // 绘制胶囊型气泡
+            ctx.save();
             ctx.beginPath();
-            ctx.roundRect(this.x - this.width/2, this.y - this.height/2, this.width, this.height, 30);
+            ctx.roundRect(this.x - this.width/2, this.y - this.height/2, this.width, this.height, 32);
             ctx.fillStyle = this.color;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = "rgba(0,0,0,0.4)";
             ctx.fill();
-            ctx.strokeStyle = "white";
-            ctx.lineWidth = 2;
+            ctx.strokeStyle = "rgba(255,255,255,0.9)";
+            ctx.lineWidth = 3;
             ctx.stroke();
 
             ctx.fillStyle = "#1a1a2e";
-            ctx.font = "bold 20px Arial";
+            ctx.font = "bold 20px 'Microsoft YaHei'";
             ctx.textAlign = "center";
-            ctx.fillText(this.text, this.x, this.y + 7);
+            ctx.textBaseline = "middle";
+            ctx.fillText(this.text, this.x, this.y);
+            ctx.restore();
         }
         update() { this.y += this.speed; }
     }
 
-    async function fetchAiQuestion() {
-        if (!gameActive) return;
-
-        // 特殊规则：如果屏幕上有长句子，不产生新气泡
-        if (bubbles.some(b => b.isLong)) return;
-
-        try {
-            const res = await fetch(`/api/question?type=${encodeURIComponent(typeSelect.value)}&diff=简单`);
-            const data = await res.json();
-            if (data.content) {
-                // 如果新生成的题是长句，且屏幕已有气泡，则跳过本次生成
-                const isNewLong = data.content.length > 6;
-                if (isNewLong && bubbles.length > 0) return;
-
-                bubbles.push(new Bubble(data.content, data.answer));
-            }
-        } catch (e) { console.error(e); }
+    function createPopEffect(x, y, width, height, color) {
+        const stage = document.getElementById('game-stage');
+        const effect = document.createElement('div');
+        effect.className = 'pop-effect';
+        effect.style.left = (x - width/2) + 'px';
+        effect.style.top = (y - height/2) + 'px';
+        effect.style.width = width + 'px';
+        effect.style.height = height + 'px';
+        effect.style.borderColor = "#ffffff"; // 特效边缘改为纯白，视觉上更闪亮
+        stage.appendChild(effect);
+        setTimeout(() => effect.remove(), 350);
     }
 
-    setInterval(fetchAiQuestion, 3000);
+    async function fetchAiQuestion() {
+        if (bubbles.some(b => b.isLong)) return;
+        try {
+            const res = await fetch(`/api/question?type=${encodeURIComponent(typeSelect.value)}`);
+            const data = await res.json();
+            if (data.content) {
+                if (data.content.length > 8 && bubbles.length > 0) return;
+                bubbles.push(new Bubble(data.content, data.answer));
+            }
+        } catch (e) {}
+    }
+
+    setInterval(fetchAiQuestion, 1800); // 稍微加快了出题频率
 
     function animate() {
-        if (!gameActive) return;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        bubbles.forEach((b, i) => {
+        for (let i = bubbles.length - 1; i >= 0; i--) {
+            const b = bubbles[i];
             b.update();
             b.draw();
-            if (b.y - 30 > canvas.height) {
-                bubbles.splice(i, 1);
-                missed++;
-                document.getElementById('missed').innerText = missed;
-                if (missed >= 10) { gameActive = false; alert("游戏结束！"); location.reload(); }
-            }
-        });
+            if (b.y - 100 > canvas.height) bubbles.splice(i, 1);
+        }
         requestAnimationFrame(animate);
     }
 
     userInput.addEventListener('input', () => {
-        const val = userInput.value.trim();
-        // 实时匹配逻辑：手速模式通常输入正确立刻消失
-        const idx = bubbles.findIndex(b => b.answer === val);
+        const val = userInput.value.trim().toLowerCase();
+        const idx = bubbles.findIndex(b => b.answer.toLowerCase() === val);
         if (idx !== -1) {
+            const b = bubbles[idx];
+            playPopSound(); // 触发增强版清脆音效
+            createPopEffect(b.x, b.y, b.width, b.height, b.color);
             bubbles.splice(idx, 1);
-            score += 10;
-            document.getElementById('score').innerText = score;
             userInput.value = '';
         }
     });
