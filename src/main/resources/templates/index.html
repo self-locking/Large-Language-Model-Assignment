@@ -17,6 +17,19 @@
             margin: 0; padding: 20px; min-height: 100vh; overflow: hidden;
         }
 
+        /* --- 音乐控制按钮 --- */
+        #music-ctrl {
+            position: fixed; top: 20px; right: 20px; z-index: 100;
+            background: rgba(0, 216, 255, 0.1);
+            border: 1px solid rgba(0, 216, 255, 0.3);
+            color: var(--primary-glow);
+            padding: 8px 15px; border-radius: 20px;
+            cursor: pointer; font-size: 14px;
+            backdrop-filter: blur(5px);
+            transition: 0.3s;
+        }
+        #music-ctrl:hover { background: rgba(0, 216, 255, 0.3); box-shadow: 0 0 15px var(--primary-glow); }
+
         /* --- 星空背景装饰 --- */
         #star-field { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
         .star {
@@ -25,7 +38,7 @@
         }
         @keyframes twinkle { 0%, 100% { opacity: 0.2; transform: scale(1); } 50% { opacity: 0.9; transform: scale(1.3); } }
 
-        /* --- 精致星球（带星环） --- */
+        /* --- 星球和装饰 --- */
         .planet-container { position: absolute; z-index: 1; pointer-events: none; opacity: 0.8; }
         .planet {
             width: 80px; height: 80px; border-radius: 50%;
@@ -42,7 +55,6 @@
             box-shadow: 0 0 10px rgba(255,255,255,0.1);
         }
 
-        /* --- 宇航员 (升级版) --- */
         .astronaut {
             position: absolute; width: 80px; z-index: 2;
             left: 10%; top: 20%;
@@ -54,7 +66,6 @@
             50% { transform: translate3d(15px, -25px, 0) rotate(5deg); }
         }
 
-        /* --- UFO (静默漂浮版) --- */
         .ufo-fixed {
             position: absolute; right: 12%; bottom: 25%; font-size: 45px;
             z-index: 2; animation: ufo-float 4s infinite ease-in-out;
@@ -104,48 +115,46 @@
         @keyframes fly { to { transform: translate(var(--x), var(--y)); opacity: 0; } }
     </style>
 </head>
-<body>
+<body onclick="startBGM()">
+
+<!-- 音乐开关按钮 -->
+<button id="music-ctrl" onclick="toggleMusic(event)">🎵 音乐: 开启</button>
+
+<!-- 背景音乐 -->
+<audio id="bg-music" loop preload="auto">
+    <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+</audio>
 
 <div id="star-field"></div>
 
-<!-- 背景星球：橙色 -->
 <div class="planet-container" style="left: 15%; bottom: 15%;">
     <div class="planet" style="--color: #ff8c42; width: 100px; height: 100px;"></div>
     <div class="ring" style="--angle: -20deg; width: 180px;"></div>
 </div>
 
-<!-- 背景星球：紫色 -->
 <div class="planet-container" style="right: 10%; top: 15%;">
     <div class="planet" style="--color: #7a00ff; width: 60px; height: 60px;"></div>
     <div class="ring" style="--angle: 30deg; width: 120px; height: 30px;"></div>
 </div>
 
-<!-- 背景星球：蓝色小行星 -->
 <div class="planet-container" style="right: 40%; bottom: 10%;">
     <div class="planet" style="--color: #00d8ff; width: 40px; height: 40px;"></div>
 </div>
 
-<!-- 升级版精致宇航员 -->
 <div class="astronaut">
     <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <!-- 背包 -->
         <rect x="25" y="35" width="50" height="40" rx="5" fill="#ccc" />
-        <!-- 身体 -->
         <path d="M35 30 H65 V70 Q65 80 55 80 H45 Q35 80 35 70 Z" fill="#fff" />
-        <!-- 头盔 -->
         <circle cx="50" cy="30" r="22" fill="#fff" />
-        <rect x="35" y="20" width="30" height="18" rx="8" fill="#333" /> <!-- 面罩 -->
-        <rect x="38" y="22" width="10" height="5" rx="2" fill="rgba(255,255,255,0.2)" /> <!-- 反光 -->
-        <!-- 腿 -->
+        <rect x="35" y="20" width="30" height="18" rx="8" fill="#333" />
+        <rect x="38" y="22" width="10" height="5" rx="2" fill="rgba(255,255,255,0.2)" />
         <rect x="37" y="75" width="10" height="15" rx="3" fill="#fff" />
         <rect x="53" y="75" width="10" height="15" rx="3" fill="#fff" />
-        <!-- 手 -->
         <path d="M35 45 Q20 50 25 60" stroke="#fff" stroke-width="8" stroke-linecap="round" fill="none" />
         <path d="M65 45 Q80 50 75 60" stroke="#fff" stroke-width="8" stroke-linecap="round" fill="none" />
     </svg>
 </div>
 
-<!-- 漂浮UFO -->
 <div class="ufo-fixed">🛸</div>
 
 <h1>TypeBurst AI: Space Rush</h1>
@@ -164,7 +173,7 @@
 </div>
 
 <div id="input-container">
-    <input type="text" id="userInput" placeholder="输入答案，击碎陨石..." autofocus autocomplete="off">
+    <input type="text" id="userInput" placeholder="敲击任意键开启宇宙乐章..." autofocus autocomplete="off">
 </div>
 
 <script>
@@ -175,10 +184,52 @@
     const userInput = document.getElementById('userInput');
     const typeSelect = document.getElementById('typeSelect');
 
+    const bgMusic = document.getElementById('bg-music');
+    const musicBtn = document.getElementById('music-ctrl');
+
+    // --- 音量调节：设置为0.05（非常轻柔） ---
+    bgMusic.volume = 0.05;
+
     let bubbles = [];
     let meteors = [];
+    let audioCtx;
 
-    // 生成背景装饰星
+    // --- 优化后的音乐功能 ---
+    function startBGM() {
+        // 初始化音频上下文（用于炸裂音效）
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        // 只有在停止时才尝试播放，防止冲突
+        if (bgMusic.paused) {
+            bgMusic.play().catch(e => {});
+        }
+    }
+
+    // 监听音乐停止/卡顿情况，自动恢复
+    bgMusic.addEventListener('stalled', () => {
+        if (!bgMusic.paused) bgMusic.play();
+    });
+
+    // 确保无限循环播放
+    bgMusic.addEventListener('ended', () => {
+        bgMusic.currentTime = 0;
+        bgMusic.play();
+    });
+
+    function toggleMusic(e) {
+        e.stopPropagation();
+        if (bgMusic.paused) {
+            bgMusic.play();
+            musicBtn.innerText = "🎵 音乐: 开启";
+        } else {
+            bgMusic.pause();
+            musicBtn.innerText = "🔇 音乐: 关闭";
+        }
+    }
+
     function createStars() {
         const field = document.getElementById('star-field');
         for (let i = 0; i < 120; i++) {
@@ -195,21 +246,17 @@
     }
     createStars();
 
-    function resizeBg() {
-        bgCanvas.width = 900; bgCanvas.height = 600;
-    }
+    function resizeBg() { bgCanvas.width = 900; bgCanvas.height = 600; }
     resizeBg();
 
-    // 简单音效
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playPopSound() {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
+        if (!audioCtx) return;
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = 'sine';
         osc.frequency.setValueAtTime(600, audioCtx.currentTime);
         osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1);
-        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
         osc.connect(gain); gain.connect(audioCtx.destination);
         osc.start(); osc.stop(audioCtx.currentTime + 0.1);
@@ -305,6 +352,7 @@
     }
 
     userInput.addEventListener('input', () => {
+        startBGM();
         const val = userInput.value.trim().toLowerCase();
         const idx = bubbles.findIndex(b => b.answer.toLowerCase() === val);
         if (idx !== -1) {
