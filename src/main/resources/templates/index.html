@@ -10,7 +10,6 @@
             --planet-orange: #ff8c42;
         }
 
-        /* 模式1(特殊状态)的样式 */
         body[data-mode="1"] {
             --primary-glow: #ff6b81;
         }
@@ -21,6 +20,16 @@
             color: white; font-family: 'Microsoft YaHei', sans-serif;
             margin: 0; padding: 20px; min-height: 100vh; overflow: hidden;
             transition: all 1.5s ease;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
         }
 
         #music-ctrl {
@@ -46,7 +55,50 @@
         .ring { position: absolute; top: 50%; left: 50%; width: 160px; height: 40px; border: 6px solid rgba(255, 255, 255, 0.2); border-radius: 50%; transform: translate(-50%, -50%) rotateX(75deg) rotateZ(var(--angle)); }
 
         h1 { color: var(--primary-glow); font-size: 2.5em; text-shadow: 0 0 20px rgba(0,216,255,0.8); margin-top: 0; z-index: 10; letter-spacing: 5px; }
-        #game-stage { position: relative; width: 900px; height: 600px; background: rgba(10, 25, 47, 0.4); border: 2px solid rgba(0, 216, 255, 0.3); border-radius: 25px; overflow: hidden; box-shadow: 0 0 50px rgba(0,0,0,0.6); backdrop-filter: blur(10px); z-index: 5; }
+
+        #game-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            z-index: 5;
+        }
+
+
+        #game-stage { position: relative; width: 900px; height: 600px; background: rgba(10, 25, 47, 0.4); border: 2px solid rgba(0, 216, 255, 0.3); border-radius: 25px; overflow: hidden; box-shadow: 0 0 50px rgba(0,0,0,0.6); backdrop-filter: blur(10px); }
+
+        #score-panel {
+            position: absolute;
+            left: -270px;
+            top: 50%;
+            transform: translateY(-50%);
+
+            width: 180px;
+            padding: 25px 20px;
+            border-radius: 20px;
+
+            background: rgba(10, 25, 47, 0.8);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(0, 216, 255, 0.4);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        #score-panel h3 {
+            margin: 0 0 15px 0; font-size: 20px; color: var(--primary-glow);
+            text-align: center; text-shadow: 0 0 10px var(--primary-glow);
+            letter-spacing: 2px;
+        }
+        #score-value {
+            font-size: 36px; font-weight: bold; color: #fff;
+            text-align: center; text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+            letter-spacing: 1px; transition: all 0.3s ease;
+        }
+        #score-value.pulse {
+            animation: scorePulse 0.3s ease;
+        }
+        @keyframes scorePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); color: #00ff88; text-shadow: 0 0 25px #00ff88; }
+        }
 
         #final-message {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -96,27 +148,27 @@
     </select>
 </div>
 
-<div id="game-stage">
-    <canvas id="bgCanvas" style="position: absolute; top:0; left:0; z-index: -1;"></canvas>
-    <canvas id="gameCanvas" width="900" height="600"></canvas>
-    <div id="final-message"></div>
+<div id="game-container">
+    <div id="score-panel">
+        <h3>得分</h3>
+        <div id="score-value">0</div>
+    </div>
+    <div id="game-stage">
+        <canvas id="bgCanvas" style="position: absolute; top:0; left:0; z-index: -1;"></canvas>
+        <canvas id="gameCanvas" width="900" height="600"></canvas>
+        <div id="final-message"></div>
+    </div>
 </div>
 
 <div id="input-container">
-    <input type="text" id="userInput" placeholder="敲击任意键开启宇宙乐章..." autofocus autocomplete="off">
+    <input type="text" id="userInput" placeholder="敲击任意键开启宇宙之旅..." autofocus autocomplete="off">
 </div>
 
 <script>
-    // ========================================
-    // 配置区域 - 在这里添加你的硅基流动 API 密钥
-    // ========================================
-    const SILICONFLOW_API_KEY = "sk-hbnrcukflzqljmjhgcbwzlzpexkowgielzalsoouxbexxfcm"; // ⚠️ 请替换为你的实际API密钥
+    const SILICONFLOW_API_KEY = "sk-hbnrcukflzqljmjhgcbwzlzpexkowgielzalsoouxbexxfcm";
     const SILICONFLOW_API_URL = "https://api.siliconflow.cn/v1/chat/completions";
-
-    // --- 核心模式判断 ---
     const isStoryMode = new URLSearchParams(window.location.search).get('mode') === '1';
 
-    // --- 你的原始题库 (特殊模式使用) ---
     const SiteConfig = {
         specialPool: {
             "单词手速": [
@@ -126,19 +178,19 @@
                 {t: "technology", a: "technology"}, {t: "space", a: "space"},
                 {t: "heartbeat", a: "heartbeat"}, {t: "star", a: "star"},
                 {t: "choose", a: "choose"}, {t: "heart", a: "heart"},
-                {t: "long", a: "long"}, {t: "why", a: "why"},
+                {t: "long", a: "long"}, {t: "love", a: "love"},
                 {t: "flip", a: "flip"}, {t: "ring", a: "ring"},
                 {t: "however", a: "however"}, {t: "fate", a: "fate"}
             ],
             "中文手速": [
-                {t: "星辰大海", a: "星辰大海"}, {t: "万有引力", a: "万有引力"},
+                {t: "星辰大海", a: "星辰大海"}, {t: "共鸣", a: "共鸣"},
                 {t: "琴瑟和鸣", a: "琴瑟和鸣"}, {t: "比翼双飞", a: "比翼双飞"},
                 {t: "山盟海誓", a: "山盟海誓"}, {t: "如影随形", a: "如影随形"},
                 {t: "左邻右舍", a: "左邻右舍"}, {t: "朝思暮想", a: "朝思暮想"},
                 {t: "春风十里", a: "春风十里"}, {t: "良辰凤褂", a: "良辰凤褂"},
                 {t: "昨天", a: "昨天"}, {t: "太阳", a: "太阳"},
                 {t: "明天", a: "明天"}, {t: "后退", a: "后退"},
-                {t: "玉玺", a: "玉玺"}, {t: "衣服", a: "衣服"},
+                {t: "爱情", a: "爱情"}, {t: "衣服", a: "衣服"},
                 {t: "月亮", a: "月亮"}, {t: "浪漫", a: "浪漫"}
             ]
         }
@@ -160,8 +212,26 @@
     let gameEnded = false;
     let availableIndices = [];
     let finalTriggered = false;
+    let score = 0;
+    const MAX_INT = 2147483647;
 
-    // --- 音效引擎 ---
+    function updateScore(value) {
+        score = value;
+        const scoreElement = document.getElementById('score-value');
+        scoreElement.textContent = score.toLocaleString();
+        scoreElement.classList.add('pulse');
+        setTimeout(() => scoreElement.classList.remove('pulse'), 300);
+    }
+
+    function addScore() {
+        if (score >= MAX_INT) {
+            score = 0;
+        } else {
+            score++;
+        }
+        updateScore(score);
+    }
+
     function ensureAudio() {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -182,7 +252,6 @@
         osc.start(); osc.stop(audioCtx.currentTime + 0.1);
     }
 
-    // --- 炸裂特效 ---
     function createBurst(x, y, color) {
         const stage = document.getElementById('game-stage');
         for (let i = 0; i < 15; i++) {
@@ -239,7 +308,7 @@
         "中文手速": [
             "星辰","银河","星海","宇宙","天际","流星","月光","星光","星轨","星云",
             "苍穹","夜空","晨曦","暮色","黎明","永恒","瞬间","远方","彼岸","未来",
-            "记忆","幻想","情感","浪漫","心动","悸动","低语","回声","旅途","漂流",
+            "记忆","幻想","情感","浪漫","心动","悸动","低语","回声","旅途","漂泊",
             "起点","终点","相遇","别离","守望","等待","希望","自由","梦想","命运",
             "轨迹","边界","未知","深空","虚空","静谧","光芒","微光","暗影","余晖",
             "呼吸","心跳","脉冲","共鸣","信号","距离","方向","坐标","瞬息","永夜",
@@ -254,9 +323,9 @@
             "暮色","黄昏","夕阳","落日","晚霞","夕辉","残阳","夕照","夜色","夜幕",
             "幽暗","深夜","漆黑","黑夜","黯淡","静夜","长夜","永夜","深渊","虚空",
             "梦境","幻境","幻梦","幻想","奇境","仙境","秘境","星境","云境","海境",
-            "旅途","征程","远行","漂流","跋涉","探险","冒险","征战","航行","行程",
+            "旅途","征程","远行","漂泊","跋涉","探险","冒险","征战","航行","行程",
             "起点","终点","路程","旅程","远方","彼岸","前方","归途","归宿","栖息",
-            "守望","等待","守护","期待","眺望","凝望","注视","凝视","观望","瞭望",
+            "守望","等待","守护","期待","眺望","凝望","注视","凝视","观望","瞻望",
             "思念","牵挂","怀念","回忆","记忆","往事","过去","昨日","前世","今生",
             "缘分","命运","宿命","际遇","机缘","巧合","偶然","必然","注定","安排",
             "希望","梦想","愿望","祈愿","企盼","向往","追寻","追逐","渴望","憧憬",
@@ -265,9 +334,9 @@
             "浪漫","情调","温柔","柔情","蜜意","情怀","深情","浓情","痴情","真情",
             "低语","耳语","轻声","细语","呢喃","呢喃细语","窃语","私语","暗语","密语",
             "回声","回响","余响","反响","共鸣","共振","响动","声息","声波","波动",
-            "旅途","旅程","征途","征程","远行","跋涉","漂流","探险","冒险","远方",
+            "旅途","旅程","征途","征程","远行","跋涉","漂泊","探险","冒险","远方",
             "起点","终点","前行","归途","归宿","路程","道路","路径","路线","方位",
-            "守望","守护","注视","眺望","瞭望","关注","目光","凝望","注目","凝视",
+            "守望","守护","注视","眺望","瞻望","关注","目光","凝望","注目","凝视",
             "等待","企盼","期盼","盼望","等待中","期待","守候","守望者","追寻","寻觅",
             "希望","梦想","渴望","愿望","祈愿","憧憬","企盼","期望","信念","目标",
             "自由","逍遥","翱翔","飞翔","解放","奔放","无拘","无束","自在","放飞",
@@ -277,29 +346,24 @@
             "深空","虚空","无垠","寂静","静谧","幽深","深邃","空灵","悠远","无限",
             "幻彩","幻影","幻境","幻梦","梦境","奇境","仙境","秘境","秘境之地","星境之地",
             "光年","时光","岁月","流年","年华","晨光","晚霞","晨曦","暮色","日暮",
-            "漫步","徜徉","游历","远行","漂泊","漂流","跋涉","旅行","征程","远方",
-            "仰望","俯瞰","注视","凝视","眺望","瞭望","观察","守望","追寻","探索",
+            "漫步","徘徊","游历","远行","漂泊","漂流","跋涉","旅行","征程","远方",
+            "仰望","俯瞰","注视","凝视","眺望","瞻望","观察","守望","追寻","探索",
             "深渊","虚空","无尽","无垠","长夜","永夜","长空","苍穹","天际","远方",
             "星河漫游","银河彼端","无垠星空","光年之外","深空回响","星际旅途","宇宙回声","漫步星河","仰望星空","流光溢彩"
         ]
     };
 
-    // ========================================
-    // 硅基流动 AI 出题函数
-    // ========================================
     async function fetchAiQuestion() {
-        // 限制屏幕上气泡数量，避免卡顿
         if (gameEnded || bubbles.length > 6) return;
 
         if (!isStoryMode) {
-            // 【正常模式】：使用硅基流动 AI 出题，失败时调用 FallbackPool
             let nextText = "";
             const isEnglish = typeSelect.value === "单词手速";
-            const currentFallbackList = FallbackPool[typeSelect.value]; // 获取对应语言的兜底词库
+            const currentFallbackList = FallbackPool[typeSelect.value];
 
             const systemPrompt = isEnglish
                 ? "You are a word generator. Generate ONE simple English word within CET-4 and CET-6. Output ONLY the word, nothing else. Do not repeat"
-                : "你是一个词语生成器。生成一个任意的2字词语或4字成语。只输出词语本身，不要其他内容，尽量不重复";
+                : "你是一个词语生成器。生成一个任意的2字词语或4字成语。只输出词语本身,不要其他内容,尽量不重复";
 
             try {
                 const response = await fetch(SILICONFLOW_API_URL, {
@@ -319,43 +383,34 @@
                     })
                 });
 
-                if (!response.ok) {
-                    throw new Error(`API错误: ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`API错误: ${response.status}`);
 
                 const data = await response.json();
                 const word = data.choices[0].message.content.trim();
-
-                // 清理可能的标点符号和多余空格
                 nextText = word.replace(/[.,!?;:"']/g, '').trim();
 
-                // 如果 AI 抽风返回了空内容，也触发兜底
                 if (!nextText) throw new Error("Empty AI Response");
 
             } catch (e) {
-                console.error('AI出题失败，调用300词库兜底:', e);
-                // --- 关键改动：AI 反应不过来时，从对应语言的 300 词库中随机抽一个 ---
+                console.error('AI出题失败,调用300词库兜底:', e);
                 nextText = currentFallbackList[Math.floor(Math.random() * currentFallbackList.length)];
             }
 
             bubbles.push(new Bubble(nextText, nextText));
 
         } else {
-            // 【特殊模式】：严格执行固定题库，逻辑完全不动
             const pool = SiteConfig.specialPool[typeSelect.value];
             if (spawnCount < pool.length) {
                 const item = pool[availableIndices[spawnCount]];
                 bubbles.push(new Bubble(item.t, item.a));
                 spawnCount++;
             } else if (bubbles.length === 0 && !finalTriggered) {
-                // 题库出完后，下落特殊气泡
                 spawnFinalBubble();
             }
         }
     }
     setInterval(fetchAiQuestion, 2000);
 
-    // --- 特殊气泡逻辑 (mode=1 专属) ---
     function spawnFinalBubble() {
         if (finalTriggered || !isStoryMode) return;
         finalTriggered = true;
@@ -369,9 +424,11 @@
     }
 
     function triggerFinalScene() {
-        // --- 新增：修改顶部标题 ---
         const titleElement = document.getElementById('title');
         if (titleElement) titleElement.innerText = "Forever With You";
+
+        updateScore(520);
+
         gameEnded = true;
         document.body.setAttribute('data-mode', '1');
         const msgElement = document.getElementById('final-message');
@@ -380,7 +437,6 @@
         document.body.style.background = "radial-gradient(circle at center, #2d004d 0%, #05050a 100%)";
     }
 
-    // --- 气泡类 ---
     class Bubble {
         constructor(text, answer) {
             this.text = text;
@@ -394,140 +450,141 @@
             this.color = `hsla(${Math.random() * 360}, 70%, 75%, 0.9)`;
         }
         draw() {
-            ctx.save();
-            ctx.translate(this.x, this.y);
-            ctx.shadowBlur = this.isTrigger ? 50 : 15;
-            ctx.shadowColor = this.isTrigger ? "#ff4757" : this.color;
-            ctx.beginPath();
-            ctx.roundRect(-this.width/2, -this.height/2, this.width, this.height, 30);
-            ctx.fillStyle = this.isTrigger ? "rgba(255, 71, 87, 0.95)" : this.color;
-            ctx.fill();
-            ctx.fillStyle = "#111";
-            ctx.font = "bold 20px Arial";
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText(this.text, 0, 0);
-            ctx.restore();
-        }
-        update() {
-            this.y += this.speed;
-        }
-    }
+           ctx.save();
+           ctx.translate(this.x, this.y);
+           ctx.shadowBlur = this.isTrigger ? 50 : 15;
+           ctx.shadowColor = this.isTrigger ? "#ff4757" : this.color;
+           ctx.beginPath();
+           ctx.roundRect(-this.width/2, -this.height/2, this.width, this.height, 30);
+           ctx.fillStyle = this.isTrigger ? "rgba(255, 71, 87,0.95)" : this.color;
+           ctx.fill();
+           ctx.fillStyle = "#111";
+           ctx.font = "bold 20px Arial";
+           ctx.textAlign = "center";
+           ctx.textBaseline = "middle";
+           ctx.fillText(this.text, 0, 0);
+           ctx.restore();
+       }
+       update() {
+           this.y += this.speed;
+       }
+   }
 
-    // --- 背景流星 ---
-    class Meteor {
-        constructor() { this.reset(); }
-        reset() {
-            this.x = Math.random() * (bgCanvas.width + 400);
-            this.y = -100;
-            this.len = Math.random() * 150 + 80;
-            this.speed = Math.random() * 8 + 4;
-            this.opacity = Math.random() * 0.5 + 0.2;
-        }
-        update() {
-            this.x -= this.speed;
-            this.y += this.speed;
-            if (this.y > bgCanvas.height + 100 || this.x < -100) this.reset();
-        }
-        draw() {
-            bgCtx.save();
-            const gradient = bgCtx.createLinearGradient(this.x, this.y, this.x + this.len, this.y - this.len);
-            gradient.addColorStop(0, `rgba(255, 255, 255, ${this.opacity})`);
-            gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
-            bgCtx.strokeStyle = gradient;
-            bgCtx.lineWidth = 2;
-            bgCtx.beginPath();
-            bgCtx.moveTo(this.x, this.y);
-            bgCtx.lineTo(this.x + this.len, this.y - this.len);
-            bgCtx.stroke();
-            bgCtx.restore();
-        }
-    }
-    for(let i=0; i<10; i++) meteors.push(new Meteor());
+   class Meteor {
+       constructor() { this.reset(); }
+       reset() {
+           this.x = Math.random() * (bgCanvas.width + 400);
+           this.y = -100;
+           this.len = Math.random() * 150 + 80;
+           this.speed = Math.random() * 8 + 4;
+           this.opacity = Math.random() * 0.5 + 0.2;
+       }
+       update() {
+           this.x -= this.speed;
+           this.y += this.speed;
+           if (this.y > bgCanvas.height + 100 || this.x < -100) this.reset();
+       }
+       draw() {
+           bgCtx.save();
+           const gradient = bgCtx.createLinearGradient(this.x, this.y, this.x + this.len, this.y - this.len);
+           gradient.addColorStop(0, `rgba(255, 255, 255, ${this.opacity})`);
+           gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
+           bgCtx.strokeStyle = gradient;
+           bgCtx.lineWidth = 2;
+           bgCtx.beginPath();
+           bgCtx.moveTo(this.x, this.y);
+           bgCtx.lineTo(this.x + this.len, this.y - this.len);
+           bgCtx.stroke();
+           bgCtx.restore();
+       }
+   }
+   for(let i=0; i<10; i++) meteors.push(new Meteor());
 
-    function resetPool() {
-        if(isStoryMode) {
-            const pool = SiteConfig.specialPool[typeSelect.value];
-            availableIndices = Array.from({length: pool.length}, (_, i) => i);
-            for (let i = availableIndices.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [availableIndices[i], availableIndices[j]] = [availableIndices[j], availableIndices[i]];
-            }
-        }
-        spawnCount = 0;
-        bubbles = [];
-        gameEnded = false;
-        finalTriggered = false;
-        document.getElementById('final-message').style.opacity = "0";
-        document.body.setAttribute('data-mode', '0');
-    }
-    resetPool();
+   function resetPool() {
+       if(isStoryMode) {
+           const pool = SiteConfig.specialPool[typeSelect.value];
+           availableIndices = Array.from({length: pool.length}, (_, i) => i);
+           for (let i = availableIndices.length - 1; i > 0; i--) {
+               const j = Math.floor(Math.random() * (i + 1));
+               [availableIndices[i], availableIndices[j]] = [availableIndices[j], availableIndices[i]];
+           }
+       }
+       spawnCount = 0;
+       bubbles = [];
+       gameEnded = false;
+       finalTriggered = false;
+       score = 0;
+       updateScore(0);
+       document.getElementById('final-message').style.opacity = "0";
+       document.body.setAttribute('data-mode', '0');
+   }
+   resetPool();
 
-    function animate() {
-        bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
-        meteors.forEach(m => { m.update(); m.draw(); });
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        for (let i = bubbles.length - 1; i >= 0; i--) {
-            bubbles[i].update();
-            bubbles[i].draw();
+   function animate() {
+       bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+       meteors.forEach(m => { m.update(); m.draw(); });
+       ctx.clearRect(0, 0, canvas.width, canvas.height);
+       for (let i = bubbles.length - 1; i >= 0; i--) {
+           bubbles[i].update();
+           bubbles[i].draw();
 
-            // ⚠️ 修复3：特殊气泡掉落超出屏幕也触发特殊画面
-            if (bubbles[i].y > canvas.height + 70) {
-                if (bubbles[i].isTrigger && isStoryMode) {
-                    // 特殊气泡掉落时也触发特殊画面
-                    triggerFinalScene();
-                }
-                bubbles.splice(i, 1);
-            }
-        }
-        requestAnimationFrame(animate);
-    }
+           if (bubbles[i].y > canvas.height + 70) {
+               if (bubbles[i].isTrigger && isStoryMode) {
+                   triggerFinalScene();
+               }
+               bubbles.splice(i, 1);
+           }
+       }
+       requestAnimationFrame(animate);
+   }
 
-    userInput.addEventListener('input', () => {
-        ensureAudio();
-        const val = userInput.value.trim().toLowerCase();
-        const idx = bubbles.findIndex(b => b.answer === val);
-        if (idx !== -1) {
-            const b = bubbles[idx];
-            playPopSound();
-            createBurst(b.x, b.y, b.color);
-            const isEnding = b.isTrigger;
-            bubbles.splice(idx, 1);
-            userInput.value = '';
-            if (isEnding) {
-                triggerFinalScene();
-            } else if (isStoryMode && spawnCount >= SiteConfig.specialPool[typeSelect.value].length && bubbles.length === 0) {
-                setTimeout(spawnFinalBubble, 500);
-            }
-        }
-    });
+   userInput.addEventListener('input', () => {
+       ensureAudio();
+       const val = userInput.value.trim().toLowerCase();
+       const idx = bubbles.findIndex(b => b.answer === val);
+       if (idx !== -1) {
+           const b = bubbles[idx];
+           playPopSound();
+           createBurst(b.x, b.y, b.color);
+           const isEnding = b.isTrigger;
+           bubbles.splice(idx, 1);
+           userInput.value = '';
 
-    // 创建星空
-    const field = document.getElementById('star-field');
-    for (let i = 0; i < 120; i++) {
-        const star = document.createElement('div');
-        star.className = 'star';
-        star.style.width = star.style.height = (Math.random()*2+1)+'px';
-        star.style.left = Math.random()*100+'%';
-        star.style.top = Math.random()*100+'%';
-        star.style.setProperty('--duration', (Math.random()*3+2)+'s');
-        field.appendChild(star);
-    }
+           addScore();
 
-    function toggleMusic(e) {
-        e.stopPropagation();
-        if (bgMusic.paused) {
-            bgMusic.play();
-            e.target.innerText = "🎵 音乐: 开启";
-        } else {
-            bgMusic.pause();
-            e.target.innerText = "🔇 音乐: 关闭";
-        }
-    }
+           if (isEnding) {
+               triggerFinalScene();
+           } else if (isStoryMode && spawnCount >= SiteConfig.specialPool[typeSelect.value].length && bubbles.length === 0) {
+               setTimeout(spawnFinalBubble, 500);
+           }
+       }
+   });
 
-    bgCanvas.width = 900;
-    bgCanvas.height = 600;
-    animate();
+   const field = document.getElementById('star-field');
+   for (let i = 0; i < 120; i++) {
+       const star = document.createElement('div');
+       star.className = 'star';
+       star.style.width = star.style.height = (Math.random()*2+1)+'px';
+       star.style.left = Math.random()*100+'%';
+       star.style.top = Math.random()*100+'%';
+       star.style.setProperty('--duration', (Math.random()*3+2)+'s');
+       field.appendChild(star);
+   }
+
+   function toggleMusic(e) {
+       e.stopPropagation();
+       if (bgMusic.paused) {
+           bgMusic.play();
+           e.target.innerText = "🎵 音乐: 开启";
+       } else {
+           bgMusic.pause();
+           e.target.innerText = "🔇 音乐: 关闭";
+       }
+   }
+
+   bgCanvas.width = 900;
+   bgCanvas.height = 600;
+   animate();
 </script>
 </body>
 </html>
