@@ -298,8 +298,8 @@
             const currentFallbackList = FallbackPool[typeSelect.value]; // 获取对应语言的兜底词库
 
             const systemPrompt = isEnglish
-                ? "You are a word generator. Generate ONE simple English word related to space, romance, or stars. Output ONLY the word, nothing else. Do not repeat"
-                : "你是一个词语生成器。生成一个2字词语或4字成语，可以是与太空、浪漫或星辰相关的中文词语。只输出词语本身，不要其他内容，尽量不重复";
+                ? "You are a word generator. Generate ONE simple English word within CET-4 and CET-6. Output ONLY the word, nothing else. Do not repeat"
+                : "你是一个词语生成器。生成一个任意的2字词语或4字成语。只输出词语本身，不要其他内容，尽量不重复";
 
             try {
                 const response = await fetch(SILICONFLOW_API_URL, {
